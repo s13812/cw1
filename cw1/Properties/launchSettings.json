@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "cw1": {
+      "commandName": "Project",
+      "commandLineArgs": "http://pja.edu.pl"
+    }
+  }
+}
