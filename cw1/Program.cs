@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,30 +11,23 @@ namespace cw1
     {
         public static async Task Main(string[] args)
         {
-            var url = "";
-
-            try
+            if (args.Length == 0)
             {
-                url = args[0];
-            }
-            catch
-            {
-                throw new ArgumentNullException("arg[0]");
-            }            
-
-            var urlRegex = new Regex("^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]");
-
-            if (!urlRegex.IsMatch(url))
-            {
-                throw new ArgumentException("arg[0] nie jest poprawnym adresem URL");
+                throw new ArgumentNullException("args[0]", "An URL should be passed as a first parameter.");
             }
 
-            var httpClient = new HttpClient();
+            bool result = Uri.TryCreate(args[0], UriKind.Absolute, out Uri url)
+                && (url.Scheme == Uri.UriSchemeHttp || url.Scheme == Uri.UriSchemeHttps);
+
+            if (!result)
+            {
+                throw new ArgumentException("The passed argument is not a correct URL.");
+            }
+
+            using var httpClient = new HttpClient();
             var response = await httpClient.GetAsync(url);
 
-            httpClient.Dispose();
-
-            if (response.IsSuccessStatusCode) 
+            if (response.StatusCode == HttpStatusCode.OK) 
             {
                 var html = await response.Content.ReadAsStringAsync();
                 var regex = new Regex("[a-z0-9]+@[a-z.]+");
@@ -51,10 +44,9 @@ namespace cw1
                         Console.WriteLine(i);
                     }
                 }
-
             } else
             {
-                Console.WriteLine("Blad w czasie pobierania strony");
+                Console.WriteLine($"Blad \"{response.StatusCode}\" w czasie pobierania strony");
             }
 
             Console.WriteLine("\nKoniec!");
